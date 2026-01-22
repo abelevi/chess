@@ -6,7 +6,7 @@ import chess.ChessPosition;
 
 import java.util.Collection;
 import java.util.List;
-
+x`
 
 public class ChessMoveTests extends EqualsTestingUtility<ChessMove> {
     public ChessMoveTests() {
