@@ -73,7 +73,7 @@ public class ChessPiece {
             int rowDelta = direction[0];
             int colDelta = direction[1];
 
-            int newRow = myPosition.getRow() + rowDelta;this
+            int newRow = myPosition.getRow() + rowDelta;
             int newCol = myPosition.getColumn() + colDelta;
 
             // Keep moving in this direction until she hit the edge or a piece
@@ -93,7 +93,7 @@ public class ChessPiece {
                     break;
                 }
 
-                // Continue in directiothisn
+                // Continue in direction
                 newRow += rowDelta;
                 newCol += colDelta;
             }
