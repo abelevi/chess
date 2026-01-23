@@ -1,5 +1,7 @@
 package chess;
 
+import jdk.jshell.spi.ExecutionControl;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -55,6 +57,41 @@ public class ChessPiece {
      *
      * @return Collection of valid moves
      */
+
+    private Collection<ChessMove> pieceMovesHelper(int[][] directions){
+        Collection<ChessMove> moves = new ArrayList<>();
+        for (int[] direction : directions) {
+            int rowDelta = direction[0];
+            int colDelta = direction[1];
+
+            int newRow = myPosition.getRow() + rowDelta;
+            int newCol = myPosition.getColumn() + colDelta;
+
+            // Keep moving in this direction until she hit the edge or a piece
+            while (newRow >= 1 && newRow <= 8 && newCol >= 1 && newCol <= 8) {
+                ChessPosition newPosition = new ChessPosition(newRow, newCol);
+                ChessPiece pieceAtNewPosition = board.getPiece(newPosition);
+
+                if (pieceAtNewPosition == null) {
+                    // Empty square
+                    moves.add(new ChessMove(myPosition, newPosition, null));
+                } else if (pieceAtNewPosition.getTeamColor() != this.pieceColor) {
+                    // Enemy piece
+                    moves.add(new ChessMove(myPosition, newPosition, null));
+                    break;
+                } else {
+                    // Own piece
+                    break;
+                }
+
+                // Continue in direction
+                newRow += rowDelta;
+                newCol += colDelta;
+            }
+        }
+
+        return moves;
+    }
     public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
 //        List<Pair> kingMoves = List.of(
 //                new Pair(-1,-1), new Pair(-1, 0), new Pair(-1, 1),
@@ -63,44 +100,71 @@ public class ChessPiece {
 //        );
         //Start with Queen (hardest)
         if (this.type == PieceType.QUEEN) {
-            Collection<ChessMove> queenMoves = new ArrayList<>();
             int[][] directionsQueen = {
                     {-1, -1}, {0, -1}, {1, -1},
                     {-1, 0},           {1, 0},
                     {-1, 1},  {0, 1},  {1, 1}
             };
 
-            for (int[] direction : directionsQueen) {
-                int rowDelta = direction[0];
-                int colDelta = direction[1];
+//            for (int[] direction : directionsQueen) {
+//                int rowDelta = direction[0];
+//                int colDelta = direction[1];
+//
+//                int newRow = myPosition.getRow() + rowDelta;
+//                int newCol = myPosition.getColumn() + colDelta;
+//
+//                // Keep moving in this direction until she hit the edge or a piece
+//                while (newRow >= 1 && newRow <= 8 && newCol >= 1 && newCol <= 8) {
+//                    ChessPosition newPosition = new ChessPosition(newRow, newCol);
+//                    ChessPiece pieceAtNewPosition = board.getPiece(newPosition);
+//
+//                    if (pieceAtNewPosition == null) {
+//                        // Empty square
+//                        queenMoves.add(new ChessMove(myPosition, newPosition, null));
+//                    } else if (pieceAtNewPosition.getTeamColor() != this.pieceColor) {
+//                        // Enemy piece
+//                        queenMoves.add(new ChessMove(myPosition, newPosition, null));
+//                        break;
+//                    } else {
+//                        // Own piece
+//                        break;
+//                    }
+//
+//                    // Continue in direction
+//                    newRow += rowDelta;
+//                    newCol += colDelta;
+//                }
+//            }
+//
+//            return queenMoves;
+            return pieceMovesHelper(directionsQueen);
+        }
+        if (this.type == PieceType.BISHOP) {
 
-                int newRow = myPosition.getRow() + rowDelta;
-                int newCol = myPosition.getColumn() + colDelta;
+            int[][] directionsBishop = {
+                    {-1,-1},{-1,1},{1,-1},{1,1}
+            };
+            return pieceMovesHelper(directionsBishop);
+        }
 
-                // Keep moving in this direction until she hit the edge or a piece
-                while (newRow >= 1 && newRow <= 8 && newCol >= 1 && newCol <= 8) {
-                    ChessPosition newPosition = new ChessPosition(newRow, newCol);
-                    ChessPiece pieceAtNewPosition = board.getPiece(newPosition);
+        if (this.type == PieceType.ROOK) {
+            int[][] directionsRook = {
+                    {1,0},{0,1},{-1,0},{0,-1}
+            };
+            return  pieceMovesHelper(directionsRook);
+        }
 
-                    if (pieceAtNewPosition == null) {
-                        // Empty square
-                        queenMoves.add(new ChessMove(myPosition, newPosition, null));
-                    } else if (pieceAtNewPosition.getTeamColor() != this.pieceColor) {
-                        // Enemy piece
-                        queenMoves.add(new ChessMove(myPosition, newPosition, null));
-                        break;
-                    } else {
-                        // Own piece
-                        break;
-                    }
+        if (this.type == PieceType.PAWN{
+            //check if forward one is empty, if it is, it is available
+            //check if diagonal forward one either direction then add those
+            return null;
+        }
 
-                    // Continue in direction
-                    newRow += rowDelta;
-                    newCol += colDelta;
-                }
-            }
-
-            return queenMoves;
+        if (this.type == PieceType.KNIGHT){
+            //directions to be single instance {3,1} and variants thereof
+        }
+        if (this.type == PieceType.KING) {
+            //directions like queen but not continuous
         }
         return null;
     }
