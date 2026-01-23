@@ -62,44 +62,47 @@ public class ChessPiece {
 //                new Pair( 1,-1), new Pair( 1, 0), new Pair( 1, 1)
 //        );
         //Start with Queen (hardest)
-        Collection<ChessMove> queenMoves = new ArrayList<>();
-        int[][] directionsQueen = {
-                {-1, -1}, {0, -1}, {1, -1},
-                {-1, 0},           {1, 0},
-                {-1, 1},  {0, 1},  {1, 1}
-        };
+        if (this.type == PieceType.QUEEN) {
+            Collection<ChessMove> queenMoves = new ArrayList<>();
+            int[][] directionsQueen = {
+                    {-1, -1}, {0, -1}, {1, -1},
+                    {-1, 0},           {1, 0},
+                    {-1, 1},  {0, 1},  {1, 1}
+            };
 
-        for (int[] direction : directionsQueen) {
-            int rowDelta = direction[0];
-            int colDelta = direction[1];
+            for (int[] direction : directionsQueen) {
+                int rowDelta = direction[0];
+                int colDelta = direction[1];
 
-            int newRow = myPosition.getRow() + rowDelta;
-            int newCol = myPosition.getColumn() + colDelta;
+                int newRow = myPosition.getRow() + rowDelta;
+                int newCol = myPosition.getColumn() + colDelta;
 
-            // Keep moving in this direction until she hit the edge or a piece
-            while (newRow >= 1 && newRow <= 8 && newCol >= 1 && newCol <= 8) {
-                ChessPosition newPosition = new ChessPosition(newRow, newCol);
-                ChessPiece pieceAtNewPosition = board.getPiece(newPosition);
+                // Keep moving in this direction until she hit the edge or a piece
+                while (newRow >= 1 && newRow <= 8 && newCol >= 1 && newCol <= 8) {
+                    ChessPosition newPosition = new ChessPosition(newRow, newCol);
+                    ChessPiece pieceAtNewPosition = board.getPiece(newPosition);
 
-                if (pieceAtNewPosition == null) {
-                    // Empty square
-                    queenMoves.add(new ChessMove(myPosition, newPosition, null));
-                } else if (pieceAtNewPosition.getTeamColor() != this.pieceColor) {
-                    // Enemy piece
-                    queenMoves.add(new ChessMove(myPosition, newPosition, null));
-                    break;
-                } else {
-                    // Own piece
-                    break;
+                    if (pieceAtNewPosition == null) {
+                        // Empty square
+                        queenMoves.add(new ChessMove(myPosition, newPosition, null));
+                    } else if (pieceAtNewPosition.getTeamColor() != this.pieceColor) {
+                        // Enemy piece
+                        queenMoves.add(new ChessMove(myPosition, newPosition, null));
+                        break;
+                    } else {
+                        // Own piece
+                        break;
+                    }
+
+                    // Continue in direction
+                    newRow += rowDelta;
+                    newCol += colDelta;
                 }
-
-                // Continue in direction
-                newRow += rowDelta;
-                newCol += colDelta;
             }
-        }
 
-        return queenMoves;
+            return queenMoves;
+        }
+        return null;
     }
 
 }
