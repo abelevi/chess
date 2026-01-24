@@ -14,7 +14,7 @@ public class ChessBoard {
     private ChessPiece piece;
     private ChessPosition position;
     public ChessBoard() {
-        ChessPiece[][] board = new ChessPiece[][][8][8]; // empty board
+        this.board = new ChessPiece[8][8]; // empty board
     }
 
     /**

@@ -122,6 +122,8 @@ public class ChessPiece {
     }
 
     public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
+        this.board = board;
+        this.myPosition = myPosition;
 //        List<Pair> kingMoves = List.of(
 //                new Pair(-1,-1), new Pair(-1, 0), new Pair(-1, 1),
 //                new Pair( 0,-1),                  new Pair( 0, 1),
@@ -234,7 +236,7 @@ public class ChessPiece {
                     {2, 1}, {2, -1}, {-2, 1}, {-2, -1},
                     {1, 2}, {1, -2}, {-1, 2}, {-1, -2}
             };
-            return  pieceMovesHelper(directionsKnight);
+            return  pieceMovesHelperSingle(directionsKnight);
         }
         if (this.type == PieceType.KING) {
             //directions like queen but not continuous
@@ -243,7 +245,7 @@ public class ChessPiece {
                     {-1, 0},           {1, 0},
                     {-1, 1},  {0, 1},  {1, 1}
             };
-            return pieceMovesHelper(directionsKing);
+            return pieceMovesHelperSingle(directionsKing);
         }
         return null;
     }
