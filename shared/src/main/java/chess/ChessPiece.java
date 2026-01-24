@@ -211,7 +211,7 @@ public class ChessPiece {
                         break;
                     }
                     moves.add(new ChessMove(myPosition, newPosition, null));
-                } else if (pieceAtNewPosition.getTeamColor() != this.pieceColor && colDelta != 0) {
+                } else if (pieceAtNewPosition != null && pieceAtNewPosition.getTeamColor() != this.pieceColor && colDelta != 0) {
                     // Enemy piece
                     moves.add(new ChessMove(myPosition, newPosition, null));
                     break;
