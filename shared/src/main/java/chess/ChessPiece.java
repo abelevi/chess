@@ -98,6 +98,11 @@ public class ChessPiece {
 
             int newRow = myPosition.getRow() + rowDelta;
             int newCol = myPosition.getColumn() + colDelta;
+
+            if (newRow < 1 || newRow > 8 || newCol < 1 || newCol > 8) {
+                continue;
+            }
+
             ChessPosition newPosition = new ChessPosition(newRow, newCol);
             ChessPiece pieceAtNewPosition = board.getPiece(newPosition);
 
@@ -107,11 +112,8 @@ public class ChessPiece {
             } else if (pieceAtNewPosition.getTeamColor() != this.pieceColor) {
                     // Enemy piece
                     moves.add(new ChessMove(myPosition, newPosition, null));
-                    break;
-            } else {
-                    // Own piece
-                    break;
             }
+            // Own piece - do nothing, check next direction
 
                 // Continue in direction
             newRow += rowDelta;
@@ -191,6 +193,7 @@ public class ChessPiece {
             //check if diagonal forward one either direction then add those
             int directionColor = (this.getTeamColor() == ChessGame.TeamColor.WHITE) ? 1 : -1;
             int startRow = (this.getTeamColor() == ChessGame.TeamColor.WHITE) ? 2 : 7;
+            int promotionRow = (this.getTeamColor() == ChessGame.TeamColor.WHITE) ? 8 : 1;
             int[][] directionsPawn = {
                     {directionColor, 0}, {directionColor, -1}, {directionColor,1}, {2*directionColor, 0}
             };
@@ -201,23 +204,36 @@ public class ChessPiece {
 
                 int newRow = myPosition.getRow() + rowDelta;
                 int newCol = myPosition.getColumn() + colDelta;
+                if (newRow < 1 || newRow > 8 || newCol < 1 || newCol > 8) {
+                    continue;
+                }
                 ChessPosition newPosition = new ChessPosition(newRow, newCol);
                 ChessPiece pieceAtNewPosition = board.getPiece(newPosition);
 
                 if (pieceAtNewPosition == null && colDelta == 0) {
                     // Empty square
-                    ChessPosition frontPos= new ChessPosition(directionColor, 0);
-                    if (((rowDelta == 2 || rowDelta == -2) && !(myPosition.getRow() == startRow) && !(board.getPiece(frontPos)==null))) {
-                        break;
+                    ChessPosition frontPos = new ChessPosition(myPosition.getRow() + directionColor, myPosition.getColumn());
+                    if ((rowDelta == 2 || rowDelta == -2) && (myPosition.getRow() != startRow || board.getPiece(frontPos) != null)) {
+                        continue;
                     }
-                    moves.add(new ChessMove(myPosition, newPosition, null));
+                    if (newRow == promotionRow) {
+                        moves.add(new ChessMove(myPosition, newPosition, PieceType.QUEEN));
+                        moves.add(new ChessMove(myPosition, newPosition, PieceType.ROOK));
+                        moves.add(new ChessMove(myPosition, newPosition, PieceType.BISHOP));
+                        moves.add(new ChessMove(myPosition, newPosition, PieceType.KNIGHT));
+                    } else {
+                        moves.add(new ChessMove(myPosition, newPosition, null));
+                    }
                 } else if (pieceAtNewPosition != null && pieceAtNewPosition.getTeamColor() != this.pieceColor && colDelta != 0) {
                     // Enemy piece
-                    moves.add(new ChessMove(myPosition, newPosition, null));
-                    break;
-                } else {
-                    // Own piece
-                    break;
+                    if (newRow == promotionRow) {
+                        moves.add(new ChessMove(myPosition, newPosition, PieceType.QUEEN));
+                        moves.add(new ChessMove(myPosition, newPosition, PieceType.ROOK));
+                        moves.add(new ChessMove(myPosition, newPosition, PieceType.BISHOP));
+                        moves.add(new ChessMove(myPosition, newPosition, PieceType.KNIGHT));
+                    } else {
+                        moves.add(new ChessMove(myPosition, newPosition, null));
+                    }
                 }
 
                 // Continue in direction
@@ -256,11 +272,11 @@ public class ChessPiece {
             return false;
         }
         ChessPiece that = (ChessPiece) o;
-        return pieceColor == that.pieceColor && type == that.type && Objects.equals(myPosition, that.myPosition) && Objects.equals(board, that.board);
+        return pieceColor == that.pieceColor && type == that.type;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(pieceColor, type, myPosition, board);
+        return Objects.hash(pieceColor, type);
     }
 }

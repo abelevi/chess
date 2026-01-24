@@ -53,7 +53,7 @@ public class ChessBoard {
         };
 
         for (int col = 1; col <= 8; col++) {
-            // White back row 
+            // White back row
             addPiece(new ChessPosition(1, col), new ChessPiece(ChessGame.TeamColor.WHITE, backRow[col-1]));
             // White pawns
             addPiece(new ChessPosition(2, col), new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.PAWN));
