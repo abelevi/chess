@@ -2,10 +2,7 @@ package chess;
 
 import jdk.jshell.spi.ExecutionControl;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Represents a single chess piece
@@ -92,6 +89,38 @@ public class ChessPiece {
 
         return moves;
     }
+
+    private Collection<ChessMove> pieceMovesHelperSingle(int[][] directions){
+        Collection<ChessMove> moves = new ArrayList<>();
+        for (int[] direction : directions) {
+            int rowDelta = direction[0];
+            int colDelta = direction[1];
+
+            int newRow = myPosition.getRow() + rowDelta;
+            int newCol = myPosition.getColumn() + colDelta;
+            ChessPosition newPosition = new ChessPosition(newRow, newCol);
+            ChessPiece pieceAtNewPosition = board.getPiece(newPosition);
+
+            if (pieceAtNewPosition == null) {
+                    // Empty square
+                    moves.add(new ChessMove(myPosition, newPosition, null));
+            } else if (pieceAtNewPosition.getTeamColor() != this.pieceColor) {
+                    // Enemy piece
+                    moves.add(new ChessMove(myPosition, newPosition, null));
+                    break;
+            } else {
+                    // Own piece
+                    break;
+            }
+
+                // Continue in direction
+            newRow += rowDelta;
+            newCol += colDelta;
+            }
+
+        return moves;
+    }
+
     public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
 //        List<Pair> kingMoves = List.of(
 //                new Pair(-1,-1), new Pair(-1, 0), new Pair(-1, 1),
@@ -154,19 +183,82 @@ public class ChessPiece {
             return  pieceMovesHelper(directionsRook);
         }
 
-        if (this.type == PieceType.PAWN{
+        if (this.type == PieceType.PAWN){
+            Collection<ChessMove> moves = new ArrayList<>();
             //check if forward one is empty, if it is, it is available
             //check if diagonal forward one either direction then add those
-            return null;
+            int directionColor = (this.getTeamColor() == ChessGame.TeamColor.WHITE) ? 1 : -1;
+            int startRow = (this.getTeamColor() == ChessGame.TeamColor.WHITE) ? 2 : 7;
+            int[][] directionsPawn = {
+                    {directionColor, 0}, {directionColor, -1}, {directionColor,1}, {2*directionColor, 0}
+            };
+
+            for (int[] direction : directionsPawn) {
+                int rowDelta = direction[0];
+                int colDelta = direction[1];
+
+                int newRow = myPosition.getRow() + rowDelta;
+                int newCol = myPosition.getColumn() + colDelta;
+                ChessPosition newPosition = new ChessPosition(newRow, newCol);
+                ChessPiece pieceAtNewPosition = board.getPiece(newPosition);
+
+                if (pieceAtNewPosition == null && colDelta == 0) {
+                    // Empty square
+                    ChessPosition frontPos= new ChessPosition(directionColor, 0);
+                    if (((rowDelta == 2 || rowDelta == -2) && !(myPosition.getRow() == startRow) && !(board.getPiece(frontPos)==null))) {
+                        break;
+                    }
+                    moves.add(new ChessMove(myPosition, newPosition, null));
+                } else if (pieceAtNewPosition.getTeamColor() != this.pieceColor && colDelta != 0) {
+                    // Enemy piece
+                    moves.add(new ChessMove(myPosition, newPosition, null));
+                    break;
+                } else {
+                    // Own piece
+                    break;
+                }
+
+                // Continue in direction
+                newRow += rowDelta;
+                newCol += colDelta;
+            }
+
+            return moves;
+
+
         }
 
         if (this.type == PieceType.KNIGHT){
-            //directions to be single instance {3,1} and variants thereof
+            //directions to be single instance {2,1} and variants thereof
+            int[][] directionsKnight = {
+                    {2, 1}, {2, -1}, {-2, 1}, {-2, -1},
+                    {1, 2}, {1, -2}, {-1, 2}, {-1, -2}
+            };
+            return  pieceMovesHelper(directionsKnight);
         }
         if (this.type == PieceType.KING) {
             //directions like queen but not continuous
+            int[][] directionsKing = {
+                    {-1, -1}, {0, -1}, {1, -1},
+                    {-1, 0},           {1, 0},
+                    {-1, 1},  {0, 1},  {1, 1}
+            };
+            return pieceMovesHelper(directionsKing);
         }
         return null;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        ChessPiece that = (ChessPiece) o;
+        return pieceColor == that.pieceColor && type == that.type && Objects.equals(myPosition, that.myPosition) && Objects.equals(board, that.board);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(pieceColor, type, myPosition, board);
+    }
 }
