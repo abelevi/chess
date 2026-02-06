@@ -90,7 +90,19 @@ public class ChessGame {
         return null;
     }
     public boolean isInCheck(TeamColor teamColor) {
+        ChessPosition kingPosition = findKing(teamColor);
+        for (int row = 1; row < 9; row++) {
+            for (int col = 1; col < 9; col++) {
+                ChessPosition position = new ChessPosition(row, col);
+                for (ChessMove move : board.getPiece(position).pieceMoves(board, position)){
+                    if (move.getEndPosition().equals(kingPosition)){
+                        return true;
+                    }
+                }
+            }
 
+        }
+        return false;
     }
 
     /**
