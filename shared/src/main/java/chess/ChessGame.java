@@ -138,14 +138,6 @@ public class ChessGame {
      */
 public boolean isInCheckmate(TeamColor teamColor) {
         if (isInCheck(teamColor)){
-            ChessPosition kingPosition = findKing(teamColor);
-            assert kingPosition != null;
-            Collection<ChessMove> kingMoves = board.getPiece(kingPosition).pieceMoves(board,kingPosition);
-            for (ChessMove move : kingMoves){
-                if (!isLethal(teamColor, move.getEndPosition())){ //if the king has a move that doesn't result in a lethal play, checkmate is false
-                    return false;
-                }
-            }
             for (int row = 1; row < 9; row++) {
                 for (int col = 1; col < 9; col++) {
                     ChessPosition position = new ChessPosition(row, col);
