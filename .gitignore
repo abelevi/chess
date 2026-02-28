@@ -10,4 +10,6 @@ out/
 .DS_Store
 
 ### Chess project ###
-server/**/db.properties
+server/**/db.propertie
+
+firebase-debug.log
