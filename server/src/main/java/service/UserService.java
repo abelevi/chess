@@ -18,7 +18,7 @@ public class UserService {
     }
 
     public AuthData register(UserData user) throws DataAccessException {
-        if (user == null){
+        if (user == null || user.username() == null || user.password() == null || user.email() == null){
             throw new DataAccessException("Error: bad request");
         }
         if (userDAO.getUser(user.username())!=null){

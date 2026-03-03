@@ -1,9 +1,13 @@
 package server;
 
+import com.google.gson.Gson;
 import dataaccess.*;
 import handler.*;
 import io.javalin.*;
+import io.javalin.json.JsonMapper;
 import service.*;
+
+import java.lang.reflect.Type;
 
 public class Server {
 
@@ -22,7 +26,21 @@ public class Server {
         GameHandler gameHandler = new GameHandler(gameService);
         ClearHandler clearHandler = new ClearHandler(clearService);
 
-        javalin = Javalin.create(config -> config.staticFiles.add("web"));
+        Gson gson = new Gson();
+        javalin = Javalin.create(config -> {
+            config.staticFiles.add("web");
+            config.jsonMapper(new JsonMapper() {
+                @Override
+                public String toJsonString(Object obj, Type type) {
+                    return gson.toJson(obj);
+                }
+
+                @Override
+                public <T> T fromJsonString(String json, Type type) {
+                    return gson.fromJson(json, type);
+                }
+            });
+        });
 
         // TODO: register routes
         javalin.post("/user", userHandler::register);
