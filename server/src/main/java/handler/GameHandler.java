@@ -58,11 +58,30 @@ public class GameHandler {
     }
 
     public void joinGame(Context ctx) {
-        // TODO: get auth token from header
-        // TODO: parse body to get "playerColor" (String) and "gameID" (int)
-        // TODO: convert playerColor string to ChessGame.TeamColor enum
-        // TODO: call gameService.joinGame(authToken, color, gameID)
-        // TODO: return 200 with empty JSON
-        // TODO: catch errors — "unauthorized" → 401, "bad request" → 400, "already taken" → 403, else → 500
+        String authToken = ctx.header("authorization");
+        try {
+            Map body = gson.fromJson(ctx.body(), Map.class);
+            String playerColor = (String) body.get("playerColor");
+            ChessGame.TeamColor color = ChessGame.TeamColor.valueOf(playerColor);
+            int gameID = ((Double) body.get("gameID")).intValue();
+            gameService.joinGame(authToken, color, gameID);
+            ctx.status(200);
+            ctx.json(new Object());
+        } catch (IllegalArgumentException | NullPointerException e) {
+            ctx.status(400);
+            ctx.json(Map.of("message", "Error: bad request"));
+        }
+        catch (DataAccessException e) {
+            if (e.getMessage().contains("bad request")) {
+                ctx.status(400);
+            } else if (e.getMessage().contains("unauthorized")) {
+                ctx.status(401);
+            } else if (e.getMessage().contains("already taken")) {
+                ctx.status(403);
+            } else {
+                ctx.status(500);
+            }
+            ctx.json(Map.of("message", e.getMessage()));
+        }
     }
 }
