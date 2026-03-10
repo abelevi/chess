@@ -42,7 +42,6 @@ public class Server {
             });
         });
 
-        // TODO: register routes
         javalin.post("/user", userHandler::register);
         javalin.post("/session", userHandler::login);
         javalin.delete("/session", userHandler::logout);

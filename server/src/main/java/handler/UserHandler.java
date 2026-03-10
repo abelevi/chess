@@ -7,8 +7,6 @@ import model.AuthData;
 import model.UserData;
 import service.UserService;
 
-import java.util.Map;
-
 public class UserHandler {
     private final UserService userService;
     private final Gson gson = new Gson();
@@ -18,25 +16,14 @@ public class UserHandler {
     }
 
     public void register(Context ctx) {
-       UserData user = gson.fromJson(ctx.body(), UserData.class);
+        UserData user = gson.fromJson(ctx.body(), UserData.class);
         try {
             AuthData auth = userService.register(user);
             ctx.status(200);
             ctx.json(auth);
+        } catch (DataAccessException e) {
+            ExceptionHandler.handleDataAccessException(ctx, e);
         }
-        catch (DataAccessException e) {
-            if (e.getMessage().contains("bad request")) {
-                ctx.status(400);
-            } else if (e.getMessage().contains("unauthorized")) {
-                ctx.status(401);
-            } else if (e.getMessage().contains("already taken")) {
-                ctx.status(403);
-            } else {
-                ctx.status(500);
-            }
-            ctx.json(Map.of("message", e.getMessage()));
-        }
-
     }
 
     public void login(Context ctx) {
@@ -45,16 +32,8 @@ public class UserHandler {
             AuthData auth = userService.login(user);
             ctx.status(200);
             ctx.json(auth);
-        }
-        catch (DataAccessException e) {
-            if (e.getMessage().contains("bad request")) {
-                ctx.status(400);
-            } else if (e.getMessage().contains("unauthorized")) {
-                ctx.status(401);
-            } else {
-                ctx.status(500);
-            }
-            ctx.json(Map.of("message", e.getMessage()));
+        } catch (DataAccessException e) {
+            ExceptionHandler.handleDataAccessException(ctx, e);
         }
     }
 
@@ -64,15 +43,8 @@ public class UserHandler {
             userService.logout(authToken);
             ctx.status(200);
             ctx.json(new Object());
+        } catch (DataAccessException e) {
+            ExceptionHandler.handleDataAccessException(ctx, e);
         }
-        catch (DataAccessException e) {
-            if (e.getMessage().contains("unauthorized")) {
-                ctx.status(401);
-            } else {
-                ctx.status(500);
-            }
-            ctx.json(Map.of("message", e.getMessage()));
-        }
-
     }
 }
