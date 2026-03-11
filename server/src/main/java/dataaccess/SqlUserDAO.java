@@ -26,13 +26,13 @@ public class SqlUserDAO implements UserDAO {
 
     @Override
     public UserData getUser(String username) throws DataAccessException {
-        String sql = "SELECT username, password_hash, email FROM usernmae WHERE username = ?";
+        String sql = "SELECT username, password_hash, email FROM users WHERE username = ?";
         try (var conn = DatabaseManager.getConnection();
              var stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, username);
             try (var rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    return new AuthData(rs.getString("username"), rs.getString("passwork_hash"), rs.getString("email"));
+                    return new UserData(rs.getString("username"), rs.getString("password_hash"), rs.getString("email"));
                 }
                 return null;
             }
@@ -43,7 +43,6 @@ public class SqlUserDAO implements UserDAO {
 
     @Override
     public void clear() throws DataAccessException {
-        public void clear() throws DataAccessException {
             String sql = "TRUNCATE TABLE users";
             try (var conn = DatabaseManager.getConnection();
                  var stmt = conn.prepareStatement(sql)) {
@@ -51,6 +50,5 @@ public class SqlUserDAO implements UserDAO {
             } catch (SQLException e) {
                 throw new DataAccessException("Error clearing usernames: " + e.getMessage(), e);
             }
-        }
     }
 }
