@@ -14,9 +14,15 @@ public class Server {
     private final Javalin javalin;
 
     public Server() {
-        MemoryUserDAO userDAO = new MemoryUserDAO();
-        MemoryAuthDAO authDAO = new MemoryAuthDAO();
-        MemoryGameDAO gameDAO = new MemoryGameDAO();
+        try {
+            DatabaseManager.initialize();
+        } catch (DataAccessException e) {
+            throw new RuntimeException("Failed to initialize database", e);
+        }
+
+        SqlUserDAO userDAO = new SqlUserDAO();
+        SqlAuthDAO authDAO = new SqlAuthDAO();
+        SqlGameDAO gameDAO = new SqlGameDAO();
 
         UserService userService = new UserService(userDAO, authDAO);
         GameService gameService = new GameService(gameDAO, authDAO);
