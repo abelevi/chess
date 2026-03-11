@@ -52,7 +52,7 @@ public class DatabaseManager {
         }
     }
 
-    private static void loadPropertiesFromResources() {
+    static void loadPropertiesFromResources() {
         try (var propStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("db.properties")) {
             if (propStream == null) {
                 throw new Exception("Unable to load db.properties");
@@ -65,7 +65,7 @@ public class DatabaseManager {
         }
     }
 
-    private static void loadProperties(Properties props) {
+    static void loadProperties(Properties props) {
         databaseName = props.getProperty("db.name");
         dbUsername = props.getProperty("db.user");
         dbPassword = props.getProperty("db.password");
@@ -73,5 +73,48 @@ public class DatabaseManager {
         var host = props.getProperty("db.host");
         var port = Integer.parseInt(props.getProperty("db.port"));
         connectionUrl = String.format("jdbc:mysql://%s:%d", host, port);
+    }
+
+    static void createTables() throws DataAccessException {
+        String[] createStatements = {
+                """
+                CREATE TABLE IF NOT EXISTS users (
+                    username VARCHAR(255) NOT NULL PRIMARY KEY,
+                    password_hash VARCHAR(255) NOT NULL,
+                    email VARCHAR(255) NOT NULL
+                )
+                """,
+                """
+                CREATE TABLE IF NOT EXISTS auth_tokens (
+                    auth_token VARCHAR(255) NOT NULL PRIMARY KEY,
+                    username VARCHAR(255) NOT NULL,
+                    FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
+                )
+                """,
+                """
+                CREATE TABLE IF NOT EXISTS games (
+                    game_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                    white_username VARCHAR(255),
+                    black_username VARCHAR(255),
+                    game_name VARCHAR(255) NOT NULL,
+                    game_data TEXT NOT NULL
+                )
+                """
+        };
+
+        try (var conn = getConnection()) {
+            for (var statement : createStatements) {
+                try (var preparedStatement = conn.prepareStatement(statement)) {
+                    preparedStatement.executeUpdate();
+                }
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Error creating tables: " + e.getMessage(), e);
+        }
+    }
+
+    public static void initialize() throws DataAccessException {
+        createDatabase();
+        createTables();
     }
 }
