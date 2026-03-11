@@ -4,9 +4,7 @@ import chess.ChessGame;
 import com.google.gson.Gson;
 import dataaccess.DataAccessException;
 import io.javalin.http.Context;
-import model.AuthData;
 import model.GameData;
-import model.UserData;
 import service.GameService;
 
 import java.util.Collection;
@@ -26,14 +24,8 @@ public class GameHandler {
             Collection<GameData> games = gameService.listGames(authToken);
             ctx.status(200);
             ctx.json(Map.of("games", games));
-        }
-        catch (DataAccessException e) {
-            if (e.getMessage().contains("unauthorized")) {
-                ctx.status(401);
-            } else {
-                ctx.status(500);
-            }
-            ctx.json(Map.of("message", e.getMessage()));
+        } catch (DataAccessException e) {
+            ExceptionHandler.handleDataAccessException(ctx, e);
         }
     }
 
@@ -46,14 +38,7 @@ public class GameHandler {
             ctx.status(200);
             ctx.json(Map.of("gameID", gameID));
         } catch (DataAccessException e) {
-            if (e.getMessage().contains("bad request")) {
-                ctx.status(400);
-            } else if (e.getMessage().contains("unauthorized")) {
-                ctx.status(401);
-            } else {
-                ctx.status(500);
-            }
-            ctx.json(Map.of("message", e.getMessage()));
+            ExceptionHandler.handleDataAccessException(ctx, e);
         }
     }
 
@@ -70,18 +55,8 @@ public class GameHandler {
         } catch (IllegalArgumentException | NullPointerException e) {
             ctx.status(400);
             ctx.json(Map.of("message", "Error: bad request"));
-        }
-        catch (DataAccessException e) {
-            if (e.getMessage().contains("bad request")) {
-                ctx.status(400);
-            } else if (e.getMessage().contains("unauthorized")) {
-                ctx.status(401);
-            } else if (e.getMessage().contains("already taken")) {
-                ctx.status(403);
-            } else {
-                ctx.status(500);
-            }
-            ctx.json(Map.of("message", e.getMessage()));
+        } catch (DataAccessException e) {
+            ExceptionHandler.handleDataAccessException(ctx, e);
         }
     }
 }
