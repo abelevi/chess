@@ -37,27 +37,75 @@ public class SqlGameDAO implements GameDAO {
 
     @Override
     public GameData getGame(int gameID) throws DataAccessException {
-        // TODO: SELECT from games WHERE game_id = ?
-        // - Deserialize game_data JSON back to ChessGame with gson.fromJson()
-        // - Return new GameData(gameID, whiteUsername, blackUsername, gameName, chessGame)
-        // - Return null if not found
+        String sql = "SELECT game_id, white_username, black_username, game_name, game_data FROM games WHERE game_id = ?";
+        try (var conn = DatabaseManager.getConnection();
+             var stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, gameID);
+            try (var rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    ChessGame chessGame = gson.fromJson(rs.getString("game_data"), ChessGame.class);
+                    return new GameData(
+                            rs.getInt("game_id"),
+                            rs.getString("white_username"),
+                            rs.getString("black_username"),
+                            rs.getString("game_name"),
+                            chessGame
+                    );
+                }
+                return null;
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Error getting game: " + e.getMessage(), e);
+        }
     }
 
     @Override
     public Collection<GameData> listGames() throws DataAccessException {
-        // TODO: SELECT all rows from games table
-        // - Deserialize each game_data column
-        // - Return a Collection<GameData>
+        String sql = "SELECT game_id, white_username, black_username, game_name, game_data FROM games";
+        var games = new ArrayList<GameData>();
+        try (var conn = DatabaseManager.getConnection();
+             var stmt = conn.prepareStatement(sql);
+             var rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                ChessGame chessGame = gson.fromJson(rs.getString("game_data"), ChessGame.class);
+                games.add(new GameData(
+                        rs.getInt("game_id"),
+                        rs.getString("white_username"),
+                        rs.getString("black_username"),
+                        rs.getString("game_name"),
+                        chessGame
+                ));
+            }
+            return games;
+        } catch (SQLException e) {
+            throw new DataAccessException("Error listing games: " + e.getMessage(), e);
+        }
     }
 
     @Override
     public void updateGame(GameData game) throws DataAccessException {
-        // TODO: UPDATE games SET white_username=?, black_username=?, game_data=? WHERE game_id=?
-        // - Re-serialize the ChessGame to JSON
+        String sql = "UPDATE games SET white_username=?, black_username=?, game_data=? WHERE game_id=?";
+        String gameJson = gson.toJson(game.game());
+        try (var conn = DatabaseManager.getConnection();
+             var stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, game.whiteUsername());
+            stmt.setString(2, game.blackUsername());
+            stmt.setString(3, gameJson);
+            stmt.setInt(4, game.gameID());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new DataAccessException("Error updating game: " + e.getMessage(), e);
+        }
     }
 
     @Override
     public void clear() throws DataAccessException {
-        // TODO: TRUNCATE the games table
+        String sql = "TRUNCATE TABLE games";
+        try (var conn = DatabaseManager.getConnection();
+             var stmt = conn.prepareStatement(sql)) {
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new DataAccessException("Error clearing games: " + e.getMessage(), e);
+        }
     }
 }
