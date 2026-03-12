@@ -22,7 +22,7 @@ public class ClearHandler {
             ctx.json(new Object());
         } catch (DataAccessException e) {
             ctx.status(500);
-            ctx.json(Map.of("message", e.getMessage()));
+            ctx.json(Map.of("message", "Error: " + e.getMessage()));
         }
     }
 }

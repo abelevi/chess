@@ -48,7 +48,7 @@ public class DatabaseManager {
             conn.setCatalog(databaseName);
             return conn;
         } catch (SQLException ex) {
-            throw new DataAccessException("failed to get connection", ex);
+            throw new DataAccessException("Error: failed to get connection", ex);
         }
     }
 
@@ -87,8 +87,7 @@ public class DatabaseManager {
                 """
                 CREATE TABLE IF NOT EXISTS auth_tokens (
                     auth_token VARCHAR(255) NOT NULL PRIMARY KEY,
-                    username VARCHAR(255) NOT NULL,
-                    FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
+                    username VARCHAR(255) NOT NULL
                 )
                 """,
                 """
