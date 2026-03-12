@@ -121,16 +121,23 @@ public class ChessGame {
         for (int row = 1; row < 9; row++) {
             for (int col = 1; col < 9; col++) {
                 ChessPosition position = new ChessPosition(row, col);
-                ChessPiece piece = board.getPiece(position);
-                if (piece != null && piece.getTeamColor() != teamColor) {
-                    for (ChessMove move : piece.pieceMoves(board, position)) {
-                        if (move.getEndPosition().equals(kingPosition)) {
-                            return true;
-                        }
-                    }
+                if (canAttackPosition(teamColor, position, kingPosition)) {
+                    return true;
                 }
             }
+        }
+        return false;
+    }
 
+    private boolean canAttackPosition(TeamColor teamColor, ChessPosition attackerPos, ChessPosition targetPos) {
+        ChessPiece piece = board.getPiece(attackerPos);
+        if (piece == null || piece.getTeamColor() == teamColor) {
+            return false;
+        }
+        for (ChessMove move : piece.pieceMoves(board, attackerPos)) {
+            if (move.getEndPosition().equals(targetPos)) {
+                return true;
+            }
         }
         return false;
     }
