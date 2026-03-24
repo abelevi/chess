@@ -71,4 +71,20 @@ public class ServerFacadeTests {
         });
     }
 
+    @Test
+    public void listGamesPositive() throws Exception {
+        var auth = facade.register("testuser", "password", "test@email.com");
+        facade.createGame(auth.authToken(), "game1");
+        facade.createGame(auth.authToken(), "game2");
+        var games = facade.listGames(auth.authToken());
+        Assertions.assertEquals(2, games.length);
+    }
+
+    @Test
+    public void listGamesInvalidToken() {
+        Assertions.assertThrows(Exception.class, () -> {
+            facade.listGames("not-a-real-token");
+        });
+    }
+
 }
