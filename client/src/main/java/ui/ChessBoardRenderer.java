@@ -47,7 +47,14 @@ public class ChessBoardRenderer {
     }
 
     private static void printColumnHeaders(boolean whiteView) {
-
+        System.out.print(SET_BG_COLOR_DARK_GREY + SET_TEXT_COLOR_WHITE + "   ");
+        int start = whiteView ? 0 : 7;
+        int end = whiteView ? 7 : 0;
+        int step = whiteView ? 1 : -1;
+        for (int i = start; whiteView ? i <= end : i >= end; i += step) {
+            System.out.print(" " + COL_LABELS[i] + " ");
+        }
+        System.out.println("   " + RESET_BG_COLOR + RESET_TEXT_COLOR);
     }
 
     private static String getPieceString(ChessPiece piece) {
