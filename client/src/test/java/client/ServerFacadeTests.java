@@ -87,4 +87,36 @@ public class ServerFacadeTests {
         });
     }
 
+    @Test
+    public void createGamePositive() throws Exception {
+        var auth = facade.register("testuser", "password", "test@email.com");
+        var gameID = facade.createGame(auth.authToken(), "mygame");
+        Assertions.assertTrue(gameID > 0);
+    }
+
+    @Test
+    public void createGameInvalidToken() {
+        Assertions.assertThrows(Exception.class, () -> {
+            facade.createGame("not-a-real-token", "mygame");
+        });
+    }
+
+    @Test
+    public void joinGamePositive() throws Exception {
+        var auth = facade.register("testuser", "password", "test@email.com");
+        var gameID = facade.createGame(auth.authToken(), "mygame");
+        Assertions.assertDoesNotThrow(() -> facade.joinGame(auth.authToken(), "WHITE", gameID));
+    }
+
+    @Test
+    public void joinGameColorTaken() {
+        Assertions.assertThrows(Exception.class, () -> {
+            var auth1 = facade.register("user1", "password", "u1@email.com");
+            var auth2 = facade.register("user2", "password", "u2@email.com");
+            var gameID = facade.createGame(auth1.authToken(), "mygame");
+            facade.joinGame(auth1.authToken(), "WHITE", gameID);
+            facade.joinGame(auth2.authToken(), "WHITE", gameID);
+        });
+    }
+
 }
