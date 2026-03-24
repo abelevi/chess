@@ -42,4 +42,33 @@ public class ServerFacadeTests {
         });
     }
 
+    @Test
+    public void loginPositive() throws Exception {
+        facade.register("testuser", "password", "test@email.com");
+        var auth = facade.login("testuser", "password");
+        Assertions.assertNotNull(auth.authToken());
+        Assertions.assertEquals("testuser", auth.username());
+    }
+
+    @Test
+    public void loginWrongPassword() {
+        Assertions.assertThrows(Exception.class, () -> {
+            facade.register("testuser", "password", "test@email.com");
+            facade.login("testuser", "wrongpassword");
+        });
+    }
+
+    @Test
+    public void logoutPositive() throws Exception {
+        var auth = facade.register("testuser", "password", "test@email.com");
+        Assertions.assertDoesNotThrow(() -> facade.logout(auth.authToken()));
+    }
+
+    @Test
+    public void logoutInvalidToken() {
+        Assertions.assertThrows(Exception.class, () -> {
+            facade.logout("not-a-real-token");
+        });
+    }
+
 }
