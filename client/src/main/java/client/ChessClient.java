@@ -1,7 +1,9 @@
 package client;
 
+import chess.ChessGame;
 import model.AuthData;
 import model.GameData;
+import ui.ChessBoardRenderer;
 import java.util.Scanner;
 
 public class ChessClient {
@@ -148,7 +150,8 @@ public class ChessClient {
         var color = tokens[2].toUpperCase();
         var game = lastGameList[index];
         server.joinGame(authToken, color, game.gameID());
-        // TODO: draw board (step 4)
+        var perspective = color.equals("BLACK") ? ChessGame.TeamColor.BLACK : ChessGame.TeamColor.WHITE;
+        ChessBoardRenderer.drawBoard(new ChessGame().getBoard(), perspective);
         return "Joined game " + game.gameName() + " as " + color + ".";
     }
 
@@ -158,7 +161,7 @@ public class ChessClient {
         }
         int index = parseGameIndex(tokens[1]);
         var game = lastGameList[index];
-        // TODO: draw board (step 4)
+        ChessBoardRenderer.drawBoard(new ChessGame().getBoard(), ChessGame.TeamColor.WHITE);
         return "Observing game " + game.gameName() + ".";
     }
 
