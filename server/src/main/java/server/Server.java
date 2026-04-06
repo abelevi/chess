@@ -49,7 +49,7 @@ public class Server {
                 }
             });
         });
-        javalin.ws("/ws", new WebSocketHandler());
+        javalin.ws("/ws", new WebSocketHandler(authDAO, gameDAO));
         javalin.post("/user", userHandler::register);
         javalin.post("/session", userHandler::login);
         javalin.delete("/session", userHandler::logout);
