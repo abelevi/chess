@@ -69,10 +69,12 @@ public class WebSocketHandler implements Consumer<WsConfig> {
 
             // Send LOAD_GAME to the connecting user
             ServerMessage loadGame = new ServerMessage(ServerMessage.ServerMessageType.LOAD_GAME);
+            loadGame.setGame(game.game());
             connectionManager.sendToSession(ctx, loadGame);
 
             // Notify all other users in the game
             ServerMessage notification = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
+            notification.setMessage(auth.username() + " connected to the game");
             connectionManager.broadcast(command.getGameID(), notification, ctx.getSessionId());
         } catch (Exception e) {
             sendError(ctx, "Error: " + e.getMessage());
@@ -93,6 +95,7 @@ public class WebSocketHandler implements Consumer<WsConfig> {
 
     private void sendError(WsContext ctx, String errorMessage) {
         ServerMessage error = new ServerMessage(ServerMessage.ServerMessageType.ERROR);
+        error.setErrorMessage(errorMessage);
         connectionManager.sendToSession(ctx, error);
     }
 
