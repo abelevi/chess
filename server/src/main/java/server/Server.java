@@ -8,6 +8,8 @@ import io.javalin.json.JsonMapper;
 import service.*;
 
 import java.lang.reflect.Type;
+import server.WebSocketHandler;
+
 
 public class Server {
 
@@ -47,7 +49,7 @@ public class Server {
                 }
             });
         });
-
+        javalin.ws("/ws", new WebSocketHandler());
         javalin.post("/user", userHandler::register);
         javalin.post("/session", userHandler::login);
         javalin.delete("/session", userHandler::logout);
