@@ -1,22 +1,34 @@
 package client;
 
 import chess.ChessGame;
+import chess.ChessMove;
+import chess.ChessPosition;
 import model.AuthData;
 import model.GameData;
 import ui.ChessBoardRenderer;
+import websocket.commands.UserGameCommand;
+import websocket.messages.ServerMessage;
+
 import java.util.Scanner;
 
-public class ChessClient {
+public class ChessClient implements WebSocketClient.ServerMessageHandler {
 
     private final ServerFacade server;
+    private final String serverUrl;
     private final Scanner scanner = new Scanner(System.in);
     private String authToken = null;
     private GameData[] lastGameList = null;
 
-    private enum State { LOGGED_OUT, LOGGED_IN }
+    private enum State { LOGGED_OUT, LOGGED_IN, IN_GAME }
     private State state = State.LOGGED_OUT;
 
+    private WebSocketClient ws;
+    private int currentGameID;
+    private ChessGame.TeamColor playerColor; // null if observing
+    private ChessGame currentGame;
+
     public ChessClient(String serverUrl) {
+        this.serverUrl = serverUrl;
         this.server = new ServerFacade(serverUrl);
     }
 
@@ -47,6 +59,16 @@ public class ChessClient {
                 case "quit" -> quit();
                 case "login" -> login(tokens);
                 case "register" -> register(tokens);
+                default -> "Unknown command. Type help for available commands.";
+            };
+        } else if (state == State.IN_GAME) {
+            return switch (command) {
+                case "help" -> helpGameplay();
+                case "redraw" -> redraw();
+                case "move" -> makeMove(tokens);
+                case "resign" -> resign();
+                case "leave" -> leaveGame();
+                case "highlight" -> highlightMoves(tokens);
                 default -> "Unknown command. Type help for available commands.";
             };
         } else {
@@ -150,8 +172,10 @@ public class ChessClient {
         var color = tokens[2].toUpperCase();
         var game = lastGameList[index];
         server.joinGame(authToken, color, game.gameID());
-        var perspective = color.equals("BLACK") ? ChessGame.TeamColor.BLACK : ChessGame.TeamColor.WHITE;
-        ChessBoardRenderer.drawBoard(new ChessGame().getBoard(), perspective);
+        playerColor = color.equals("BLACK") ? ChessGame.TeamColor.BLACK : ChessGame.TeamColor.WHITE;
+        currentGameID = game.gameID();
+        connectWebSocket();
+        state = State.IN_GAME;
         return "Joined game " + game.gameName() + " as " + color + ".";
     }
 
@@ -161,8 +185,130 @@ public class ChessClient {
         }
         int index = parseGameIndex(tokens[1]);
         var game = lastGameList[index];
-        ChessBoardRenderer.drawBoard(new ChessGame().getBoard(), ChessGame.TeamColor.WHITE);
+        playerColor = null;
+        currentGameID = game.gameID();
+        connectWebSocket();
+        state = State.IN_GAME;
         return "Observing game " + game.gameName() + ".";
+    }
+
+    // ── Gameplay commands ─────────────────────────
+
+    private String helpGameplay() {
+        return """
+                redraw - redraw the chess board
+                move <FROM> <TO> [PROMOTION] - make a move (e.g. move e2 e4)
+                resign - forfeit the game
+                leave - leave the game
+                highlight <POSITION> - show legal moves (e.g. highlight e2)
+                help - with possible commands""";
+    }
+
+    private String redraw() {
+        if (currentGame != null) {
+            var perspective = (playerColor != null) ? playerColor : ChessGame.TeamColor.WHITE;
+            ChessBoardRenderer.drawBoard(currentGame.getBoard(), perspective);
+        }
+        return "";
+    }
+
+    private String makeMove(String[] tokens) throws Exception {
+        if (playerColor == null) {
+            return "Observers cannot make moves.";
+        }
+        if (tokens.length < 3) {
+            return "Usage: move <FROM> <TO> [PROMOTION]";
+        }
+        ChessPosition from = parsePosition(tokens[1]);
+        ChessPosition to = parsePosition(tokens[2]);
+        chess.ChessPiece.PieceType promotion = null;
+        if (tokens.length >= 4) {
+            promotion = parsePromotion(tokens[3]);
+        }
+        ChessMove move = new ChessMove(from, to, promotion);
+        var command = new UserGameCommand(authToken, currentGameID, move);
+        ws.sendCommand(command);
+        return "";
+    }
+
+    private String resign() throws Exception {
+        if (playerColor == null) {
+            return "Observers cannot resign.";
+        }
+        System.out.print("Are you sure you want to resign? (yes/no): ");
+        var confirm = scanner.nextLine().trim().toLowerCase();
+        if (!confirm.equals("yes")) {
+            return "Resignation cancelled.";
+        }
+        var command = new UserGameCommand(UserGameCommand.CommandType.RESIGN, authToken, currentGameID);
+        ws.sendCommand(command);
+        return "";
+    }
+
+    private String leaveGame() throws Exception {
+        var command = new UserGameCommand(UserGameCommand.CommandType.LEAVE, authToken, currentGameID);
+        ws.sendCommand(command);
+        ws.close();
+        ws = null;
+        currentGame = null;
+        state = State.LOGGED_IN;
+        return "Left the game.";
+    }
+
+    private String highlightMoves(String[] tokens) {
+        if (tokens.length < 2) {
+            return "Usage: highlight <POSITION> (e.g. highlight e2)";
+        }
+        if (currentGame == null) {
+            return "No game loaded.";
+        }
+        ChessPosition position = parsePosition(tokens[1]);
+        var piece = currentGame.getBoard().getPiece(position);
+        if (piece == null) {
+            return "No piece at that position.";
+        }
+        var validMoves = currentGame.validMoves(position);
+        var perspective = (playerColor != null) ? playerColor : ChessGame.TeamColor.WHITE;
+        ChessBoardRenderer.drawBoard(currentGame.getBoard(), perspective);
+        if (validMoves.isEmpty()) {
+            return "No legal moves for that piece.";
+        }
+        var sb = new StringBuilder("Legal moves: ");
+        for (var move : validMoves) {
+            sb.append(positionToString(move.getEndPosition())).append(" ");
+        }
+        return sb.toString().trim();
+    }
+
+    // ── WebSocket ─────────────────────────────────
+
+    private void connectWebSocket() throws Exception {
+        ws = new WebSocketClient(serverUrl, this);
+        var command = new UserGameCommand(UserGameCommand.CommandType.CONNECT, authToken, currentGameID);
+        ws.sendCommand(command);
+    }
+
+    @Override
+    public void onMessage(ServerMessage message) {
+        switch (message.getServerMessageType()) {
+            case LOAD_GAME -> {
+                currentGame = message.getGame();
+                var perspective = (playerColor != null) ? playerColor : ChessGame.TeamColor.WHITE;
+                System.out.println();
+                ChessBoardRenderer.drawBoard(currentGame.getBoard(), perspective);
+                printPrompt();
+            }
+            case NOTIFICATION -> {
+                System.out.println();
+                System.out.println("NOTIFICATION: " + message.getMessage());
+                printPrompt();
+            }
+            case ERROR -> {
+                System.out.println();
+                System.out.println("ERROR: " + message.getErrorMessage());
+                printPrompt();
+            }
+        }
     }
 
     // ── Helpers ────────────────────────────────────
@@ -184,8 +330,36 @@ public class ChessClient {
         return value == null ? "—" : value;
     }
 
+    private ChessPosition parsePosition(String input) {
+        if (input.length() != 2) {
+            throw new IllegalArgumentException("Invalid position: " + input);
+        }
+        int col = input.charAt(0) - 'a' + 1;
+        int row = input.charAt(1) - '0';
+        return new ChessPosition(row, col);
+    }
+
+    private String positionToString(ChessPosition pos) {
+        char col = (char) ('a' + pos.getColumn() - 1);
+        return "" + col + pos.getRow();
+    }
+
+    private chess.ChessPiece.PieceType parsePromotion(String input) {
+        return switch (input.toLowerCase()) {
+            case "queen", "q" -> chess.ChessPiece.PieceType.QUEEN;
+            case "rook", "r" -> chess.ChessPiece.PieceType.ROOK;
+            case "bishop", "b" -> chess.ChessPiece.PieceType.BISHOP;
+            case "knight", "n" -> chess.ChessPiece.PieceType.KNIGHT;
+            default -> throw new IllegalArgumentException("Invalid promotion piece: " + input);
+        };
+    }
+
     private void printPrompt() {
-        var label = (state == State.LOGGED_OUT) ? "[LOGGED_OUT]" : "[LOGGED_IN]";
+        var label = switch (state) {
+            case LOGGED_OUT -> "[LOGGED_OUT]";
+            case LOGGED_IN -> "[LOGGED_IN]";
+            case IN_GAME -> "[IN_GAME]";
+        };
         System.out.print(label + " >>> ");
     }
 }
