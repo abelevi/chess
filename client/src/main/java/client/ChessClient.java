@@ -268,16 +268,15 @@ public class ChessClient implements WebSocketClient.ServerMessageHandler {
             return "No piece at that position.";
         }
         var validMoves = currentGame.validMoves(position);
+        var destinations = validMoves.stream()
+                .map(ChessMove::getEndPosition)
+                .collect(java.util.stream.Collectors.toSet());
         var perspective = (playerColor != null) ? playerColor : ChessGame.TeamColor.WHITE;
-        ChessBoardRenderer.drawBoard(currentGame.getBoard(), perspective);
+        ChessBoardRenderer.drawBoard(currentGame.getBoard(), perspective, position, destinations);
         if (validMoves.isEmpty()) {
             return "No legal moves for that piece.";
         }
-        var sb = new StringBuilder("Legal moves: ");
-        for (var move : validMoves) {
-            sb.append(positionToString(move.getEndPosition())).append(" ");
-        }
-        return sb.toString().trim();
+        return validMoves.size() + " legal move(s) highlighted.";
     }
 
     // ── WebSocket ─────────────────────────────────

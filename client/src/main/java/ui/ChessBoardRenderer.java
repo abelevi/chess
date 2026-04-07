@@ -5,6 +5,9 @@ import chess.ChessGame;
 import chess.ChessPiece;
 import chess.ChessPosition;
 
+import java.util.Collection;
+import java.util.Collections;
+
 import static ui.EscapeSequences.*;
 
 public class ChessBoardRenderer {
@@ -12,6 +15,11 @@ public class ChessBoardRenderer {
     private static final String[] COL_LABELS = {"a", "b", "c", "d", "e", "f", "g", "h"};
 
     public static void drawBoard(ChessBoard board, ChessGame.TeamColor perspective) {
+        drawBoard(board, perspective, null, Collections.emptySet());
+    }
+
+    public static void drawBoard(ChessBoard board, ChessGame.TeamColor perspective,
+                                  ChessPosition selectedPosition, Collection<ChessPosition> highlights) {
         boolean whiteView = (perspective == ChessGame.TeamColor.WHITE);
 
         System.out.println();
@@ -29,10 +37,19 @@ public class ChessBoardRenderer {
             int colStep = whiteView ? 1 : -1;
 
             for (int col = colStart; whiteView ? col <= colEnd : col >= colEnd; col += colStep) {
+                ChessPosition pos = new ChessPosition(row, col);
                 boolean isLightSquare = (row + col) % 2 != 0;
-                String bgColor = isLightSquare ? SET_BG_COLOR_WHITE : SET_BG_COLOR_LIGHT_GREY;
 
-                ChessPiece piece = board.getPiece(new ChessPosition(row, col));
+                String bgColor;
+                if (selectedPosition != null && selectedPosition.equals(pos)) {
+                    bgColor = SET_BG_COLOR_YELLOW;
+                } else if (highlights.contains(pos)) {
+                    bgColor = isLightSquare ? SET_BG_COLOR_GREEN : SET_BG_COLOR_DARK_GREEN;
+                } else {
+                    bgColor = isLightSquare ? SET_BG_COLOR_WHITE : SET_BG_COLOR_LIGHT_GREY;
+                }
+
+                ChessPiece piece = board.getPiece(pos);
                 String pieceStr = getPieceString(piece);
 
                 System.out.print(bgColor + pieceStr);
