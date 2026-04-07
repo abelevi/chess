@@ -13,10 +13,20 @@ import java.util.Objects;
 public class ChessGame {
     private ChessBoard board;
     private TeamColor currentTurn;
+    private boolean isOver;
     public ChessGame() {
         board = new ChessBoard();
         board.resetBoard();
         currentTurn = TeamColor.WHITE;
+        isOver = false;
+    }
+
+    public boolean isOver() {
+        return isOver;
+    }
+
+    public void setOver(boolean over) {
+        isOver = over;
     }
 
     /**
