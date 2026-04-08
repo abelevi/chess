@@ -11,8 +11,8 @@ import java.util.Objects;
  */
 public class ChessBoard {
     private ChessPiece[][] board;
-    private ChessPiece piece;
-    private ChessPosition position;
+    private transient ChessPiece piece;
+    private transient ChessPosition position;
     public ChessBoard() {
         this.board = new ChessPiece[8][8]; // empty board
     }
