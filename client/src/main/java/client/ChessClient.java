@@ -338,11 +338,6 @@ public class ChessClient implements WebSocketClient.ServerMessageHandler {
         return new ChessPosition(row, col);
     }
 
-    private String positionToString(ChessPosition pos) {
-        char col = (char) ('a' + pos.getColumn() - 1);
-        return "" + col + pos.getRow();
-    }
-
     private chess.ChessPiece.PieceType parsePromotion(String input) {
         return switch (input.toLowerCase()) {
             case "queen", "q" -> chess.ChessPiece.PieceType.QUEEN;
