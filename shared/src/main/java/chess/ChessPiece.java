@@ -11,8 +11,8 @@ import java.util.*;
 public class ChessPiece {
     private ChessGame.TeamColor pieceColor;
     private ChessPiece.PieceType type;
-    private ChessPosition myPosition;
-    private ChessBoard board;
+    private transient ChessPosition myPosition;
+    private transient ChessBoard board;
 
     public ChessPiece(ChessGame.TeamColor pieceColor, ChessPiece.PieceType type) {
         this.pieceColor = pieceColor;

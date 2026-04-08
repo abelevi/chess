@@ -45,11 +45,11 @@ public class WebSocketHandler implements Consumer<WsConfig> {
         });
 
         wsConfig.onClose(ctx -> {
-            connectionManager.removeConnection(ctx.getSessionId());
+            connectionManager.removeConnection(ctx.sessionId());
         });
 
         wsConfig.onError(ctx -> {
-            connectionManager.removeConnection(ctx.getSessionId());
+            connectionManager.removeConnection(ctx.sessionId());
         });
     }
 
@@ -68,7 +68,7 @@ public class WebSocketHandler implements Consumer<WsConfig> {
             }
 
             Connection connection = new Connection(auth.username(), ctx);
-            connectionManager.addConnection(command.getGameID(), ctx.getSessionId(), connection);
+            connectionManager.addConnection(command.getGameID(), ctx.sessionId(), connection);
 
             // Send LOAD_GAME to the connecting user
             ServerMessage loadGame = new ServerMessage(ServerMessage.ServerMessageType.LOAD_GAME);
@@ -79,7 +79,7 @@ public class WebSocketHandler implements Consumer<WsConfig> {
             String role = getRoleDescription(game, auth.username());
             ServerMessage notification = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
             notification.setMessage(auth.username() + " joined the game as " + role);
-            connectionManager.broadcast(command.getGameID(), notification, ctx.getSessionId());
+            connectionManager.broadcast(command.getGameID(), notification, ctx.sessionId());
         } catch (Exception e) {
             sendError(ctx, "Error: " + e.getMessage());
         }
@@ -133,13 +133,13 @@ public class WebSocketHandler implements Consumer<WsConfig> {
             ServerMessage loadGame = new ServerMessage(ServerMessage.ServerMessageType.LOAD_GAME);
             loadGame.setGame(game);
             connectionManager.sendToSession(ctx, loadGame);
-            connectionManager.broadcast(command.getGameID(), loadGame, ctx.getSessionId());
+            connectionManager.broadcast(command.getGameID(), loadGame, ctx.sessionId());
 
             // Send NOTIFICATION of the move to other players
             String moveStr = moveToString(command.getMove());
             ServerMessage notification = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
             notification.setMessage(username + " moved " + moveStr);
-            connectionManager.broadcast(command.getGameID(), notification, ctx.getSessionId());
+            connectionManager.broadcast(command.getGameID(), notification, ctx.sessionId());
 
             // Check for checkmate or stalemate after the move
             ChessGame.TeamColor opponent = (playerColor == ChessGame.TeamColor.WHITE)
@@ -151,19 +151,19 @@ public class WebSocketHandler implements Consumer<WsConfig> {
                 ServerMessage checkmateNotification = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
                 checkmateNotification.setMessage(opponentName + " is in checkmate. " + username + " wins!");
                 connectionManager.sendToSession(ctx, checkmateNotification);
-                connectionManager.broadcast(command.getGameID(), checkmateNotification, ctx.getSessionId());
+                connectionManager.broadcast(command.getGameID(), checkmateNotification, ctx.sessionId());
             } else if (game.isInStalemate(opponent)) {
                 game.setOver(true);
                 gameDAO.updateGame(gameData);
                 ServerMessage stalemateNotification = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
                 stalemateNotification.setMessage("Game ended in stalemate");
                 connectionManager.sendToSession(ctx, stalemateNotification);
-                connectionManager.broadcast(command.getGameID(), stalemateNotification, ctx.getSessionId());
+                connectionManager.broadcast(command.getGameID(), stalemateNotification, ctx.sessionId());
             } else if (game.isInCheck(opponent)) {
                 ServerMessage checkNotification = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
                 checkNotification.setMessage(opponentName + " is in check");
                 connectionManager.sendToSession(ctx, checkNotification);
-                connectionManager.broadcast(command.getGameID(), checkNotification, ctx.getSessionId());
+                connectionManager.broadcast(command.getGameID(), checkNotification, ctx.sessionId());
             }
         } catch (InvalidMoveException e) {
             sendError(ctx, "Error: invalid move");
@@ -207,8 +207,8 @@ public class WebSocketHandler implements Consumer<WsConfig> {
             // Notify others and remove connection
             ServerMessage notification = new ServerMessage(ServerMessage.ServerMessageType.NOTIFICATION);
             notification.setMessage(auth.username() + " left the game");
-            connectionManager.broadcast(command.getGameID(), notification, ctx.getSessionId());
-            connectionManager.removeConnection(command.getGameID(), ctx.getSessionId());
+            connectionManager.broadcast(command.getGameID(), notification, ctx.sessionId());
+            connectionManager.removeConnection(command.getGameID(), ctx.sessionId());
         } catch (Exception e) {
             sendError(ctx, "Error: " + e.getMessage());
         }
@@ -252,7 +252,7 @@ public class WebSocketHandler implements Consumer<WsConfig> {
                     playerColor == ChessGame.TeamColor.WHITE ? ChessGame.TeamColor.BLACK : ChessGame.TeamColor.WHITE)
                     + " wins!");
             connectionManager.sendToSession(ctx, notification);
-            connectionManager.broadcast(command.getGameID(), notification, ctx.getSessionId());
+            connectionManager.broadcast(command.getGameID(), notification, ctx.sessionId());
         } catch (Exception e) {
             sendError(ctx, "Error: " + e.getMessage());
         }
