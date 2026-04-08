@@ -51,8 +51,9 @@ public class ChessBoardRenderer {
 
                 ChessPiece piece = board.getPiece(pos);
                 String pieceStr = getPieceString(piece);
+                String textColor = getTextColor(piece);
 
-                System.out.print(bgColor + pieceStr);
+                System.out.print(bgColor + textColor + pieceStr);
             }
 
             System.out.print(SET_BG_COLOR_DARK_GREY + SET_TEXT_COLOR_WHITE + " " + row + " ");
@@ -72,6 +73,14 @@ public class ChessBoardRenderer {
             System.out.print(" " + COL_LABELS[i] + " ");
         }
         System.out.println("   " + RESET_BG_COLOR + RESET_TEXT_COLOR);
+    }
+
+    private static String getTextColor(ChessPiece piece) {
+        if (piece == null) {
+            return "";
+        }
+        return piece.getTeamColor() == ChessGame.TeamColor.WHITE
+                ? SET_TEXT_COLOR_WHITE : SET_TEXT_COLOR_BLACK;
     }
 
     private static String getPieceString(ChessPiece piece) {
