@@ -80,31 +80,20 @@ public class ChessBoardRenderer {
             return "";
         }
         return piece.getTeamColor() == ChessGame.TeamColor.WHITE
-                ? SET_TEXT_COLOR_WHITE : SET_TEXT_COLOR_BLACK;
+                ? SET_TEXT_COLOR_BLUE : SET_TEXT_COLOR_RED;
     }
 
     private static String getPieceString(ChessPiece piece) {
         if (piece == null) {
             return EMPTY;
         }
-        if (piece.getTeamColor() == ChessGame.TeamColor.WHITE) {
-            return switch (piece.getPieceType()) {
-                case KING -> BLACK_KING;
-                case QUEEN -> BLACK_QUEEN;
-                case BISHOP -> BLACK_BISHOP;
-                case KNIGHT -> BLACK_KNIGHT;
-                case ROOK -> BLACK_ROOK;
-                case PAWN -> BLACK_PAWN;
-            };
-        } else {
-            return switch (piece.getPieceType()) {
-                case KING -> WHITE_KING;
-                case QUEEN -> WHITE_QUEEN;
-                case BISHOP -> WHITE_BISHOP;
-                case KNIGHT -> WHITE_KNIGHT;
-                case ROOK -> WHITE_ROOK;
-                case PAWN -> WHITE_PAWN;
-            };
-        }
+        return switch (piece.getPieceType()) {
+            case KING -> BLACK_KING;
+            case QUEEN -> BLACK_QUEEN;
+            case BISHOP -> BLACK_BISHOP;
+            case KNIGHT -> BLACK_KNIGHT;
+            case ROOK -> BLACK_ROOK;
+            case PAWN -> BLACK_PAWN;
+        };
     }
 }
