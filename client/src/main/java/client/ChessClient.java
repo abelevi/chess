@@ -289,25 +289,63 @@ public class ChessClient implements WebSocketClient.ServerMessageHandler {
 
     @Override
     public void onMessage(ServerMessage message) {
-        switch (message.getServerMessageType()) {
-            case LOAD_GAME -> {
-                currentGame = message.getGame();
-                var perspective = (playerColor != null) ? playerColor : ChessGame.TeamColor.WHITE;
+        try {
+            if (message == null || message.getServerMessageType() == null) {
                 System.out.println();
-                ChessBoardRenderer.drawBoard(currentGame.getBoard(), perspective);
+                System.out.println("WARNING: received malformed server message");
                 printPrompt();
+                return;
             }
-            case NOTIFICATION -> {
-                System.out.println();
-                System.out.println("NOTIFICATION: " + message.getMessage());
-                printPrompt();
+            switch (message.getServerMessageType()) {
+                case LOAD_GAME -> {
+                    if (message.getGame() == null) {
+                        System.out.println();
+                        System.out.println("WARNING: LOAD_GAME received with no game");
+                        printPrompt();
+                        return;
+                    }
+                    currentGame = message.getGame();
+                    var perspective = (playerColor != null) ? playerColor : ChessGame.TeamColor.WHITE;
+                    System.out.println();
+                    ChessBoardRenderer.drawBoard(currentGame.getBoard(), perspective);
+                    printPrompt();
+                }
+                case NOTIFICATION -> {
+                    System.out.println();
+                    System.out.println("NOTIFICATION: " + message.getMessage());
+                    printPrompt();
+                }
+                case ERROR -> {
+                    System.out.println();
+                    System.out.println("ERROR: " + message.getErrorMessage());
+                    printPrompt();
+                }
+                default -> {
+                    System.out.println();
+                    System.out.println("WARNING: unknown server message type: " + message.getServerMessageType());
+                    printPrompt();
+                }
             }
-            case ERROR -> {
-                System.out.println();
-                System.out.println("ERROR: " + message.getErrorMessage());
-                printPrompt();
-            }
+        } catch (Throwable t) {
+            // Do NOT let an exception propagate — Jakarta would kill the session.
+            System.out.println();
+            System.out.println("ERROR handling server message: " + t.getMessage());
+            printPrompt();
         }
+    }
+
+    @Override
+    public void onDisconnect(String reason) {
+        if (state != State.IN_GAME) {
+            return;
+        }
+        state = State.LOGGED_IN;
+        ws = null;
+        currentGame = null;
+        playerColor = null;
+        System.out.println();
+        System.out.println("Disconnected from game (" + reason + ")");
+        printPrompt();
     }
 
     // ── Helpers ────────────────────────────────────

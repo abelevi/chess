@@ -48,6 +48,9 @@ public class Server {
                     return gson.fromJson(json, type);
                 }
             });
+            config.jetty.modifyWebSocketServletFactory(factory ->
+                factory.setIdleTimeout(java.time.Duration.ofHours(1))
+            );
         });
         javalin.ws("/ws", new WebSocketHandler(authDAO, gameDAO));
         javalin.post("/user", userHandler::register);

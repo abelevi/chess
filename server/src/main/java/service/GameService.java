@@ -46,12 +46,12 @@ public class GameService {
         String blackUsername = game.blackUsername();
 
         if (color == ChessGame.TeamColor.WHITE) {
-            if (whiteUsername != null) {
+            if (whiteUsername != null && !whiteUsername.equals(auth.username())) {
                 throw new DataAccessException("Error: already taken");
             }
             whiteUsername = auth.username();
         } else {
-            if (blackUsername != null) {
+            if (blackUsername != null && !blackUsername.equals(auth.username())) {
                 throw new DataAccessException("Error: already taken");
             }
             blackUsername = auth.username();

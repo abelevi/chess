@@ -36,10 +36,19 @@ public class ConnectionManager {
             return;
         }
         String json = gson.toJson(message);
+        java.util.List<String> dead = new java.util.ArrayList<>();
         for (Map.Entry<String, Connection> entry : connections.entrySet()) {
-            if (!entry.getKey().equals(excludeSessionID)) {
-                sendMessage(entry.getValue().session, json);
+            if (entry.getKey().equals(excludeSessionID)) {
+                continue;
             }
+            if (!sendMessage(entry.getValue().session, json)) {
+                dead.add(entry.getKey());
+            }
+        }
+        // Evict any sessions whose send failed so subsequent broadcasts
+        // don't keep hitting a dead socket.
+        for (String sessionId : dead) {
+            connections.remove(sessionId);
         }
     }
 
@@ -47,11 +56,15 @@ public class ConnectionManager {
         sendMessage(session, gson.toJson(message));
     }
 
-    private void sendMessage(WsContext session, String json) {
+    private boolean sendMessage(WsContext session, String json) {
         try {
             session.send(json);
+            return true;
         } catch (Exception e) {
-            // connection is dead, will be cleaned up on close
+            System.err.println("WebSocket send failed for session "
+                    + session.sessionId() + ": " + e.getMessage());
+            e.printStackTrace(System.err);
+            return false;
         }
     }
 }
